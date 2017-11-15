@@ -41,7 +41,7 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
-data
+/data/
 figures
 models
 results
