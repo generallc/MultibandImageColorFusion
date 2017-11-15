@@ -10,7 +10,7 @@ import argparse
 import numpy as np
 import skimage.io
 
-sys.path.insert(0, '/media/generallc/DoctoralResearch/DoctoralCodes/LLLInfraredColorful_threeband/src/model')
+sys.path.insert(0, '/media/deeplearning/Document_SSD/FrankLewis/DoctoralCodes/MultibandImageColorFusion/src/model')
 import models
 
 
@@ -48,7 +48,7 @@ if __name__ == '__main__':
                  "training_mode": args.training_mode,
                  "nb_neighbors": args.nb_neighbors,
                  "epoch": args.epoch,
-                 "T": 0,
+                 "T": 0.5,
                  "sub_name": "t0.5",
                  "img_dim": args.img_dim,
                  "model_name": 'Richard_Colorization'
@@ -66,6 +66,13 @@ if __name__ == '__main__':
         color_model = models.RichardImageColorizationModel().create_model(**d_params)
     elif model_name == "Richard_Colorization_V1":
         color_model = models.RichardImageColorizationModel_V1().create_model(**d_params)
+
+    elif model_name == "Residual_Colorization":
+        color_model = models.ResidualImageColorizationModel().create_model(**d_params)
+
+    elif model_name == "Hypercolum_Colorization":
+        color_model = models.HypercolumImageColorizationModel().create_model(**d_params)
+
 
     # Load weights
     weights_path = os.path.join('../../models/%s/%s/%s_weights_epoch50.h5' % (model_name, sub_name, model_name))
@@ -201,7 +208,7 @@ if __name__ == '__main__':
         skimage.io.imsave('../../results/' + sub_name + '/' + save_name + '.jpg', arr)
         name += 1
 
-        # plt.show()
+        plt.show()
 
 
 

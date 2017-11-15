@@ -15,9 +15,9 @@ from keras.layers.convolutional import Conv2D, UpSampling2D
 from keras.layers.merge import Average, Concatenate
 from keras.utils import generic_utils
 from keras.optimizers import SGD, Adam
-from keras.utils.visualize_util import plot
+from keras.utils.vis_utils import plot_model
 # Utils
-sys.path.insert(0, '/media/generallc/DoctoralResearch/DoctoralCodes/LLLInfraredColorful_threeband/src/utils')
+sys.path.insert(0, '/media/deeplearning/Document_SSD/FrankLewis/DoctoralCodes/MultibandImageColorFusion/src/utils')
 import batch_utils
 import general_utils
 
@@ -307,19 +307,21 @@ class RichardImageColorizationModel(BaseImageColorizationModel):
         # 仅预测色度信息
         model = Model(input=[init], output=[color_output], name=self.model_name)
 
+
         sgd = SGD(lr=0.0005, decay=0.5e-3, momentum=0.9, nesterov=True)
+        adam = Adam(lr=0.001)
 
         # 同时预测亮度信息和色度信息,即多任务输出
         # model.compile(loss={'color_output': categorical_crossentropy_color(prior_factor), 'gray_output': 'mae'},
         #               loss_weights=[1., 1.], optimizer=sgd)
 
         # 仅预测色度信息
-        model.compile(loss=categorical_crossentropy_color(prior_factor), optimizer=sgd)
+        model.compile(loss=categorical_crossentropy_color(prior_factor), optimizer=adam)
 
         self.model = model
         model.summary()
 
-        plot(model, to_file='../../figures/%s_%s.png' % (self.model_name, sub_name), show_shapes=True, show_layer_names=True)
+        plot_model(model, to_file='../../figures/%s_%s.png' % (self.model_name, sub_name), show_shapes=True, show_layer_names=True)
         return model
 
     def fit(self, **kwargs):
@@ -340,7 +342,6 @@ class RichardImageColorizationModel_V1(BaseImageColorizationModel):
             Creates a model to be used to scale images of specific height and width.
         """
         sub_name = kwargs["sub_name"]
-
 
         # Load the array of quantized ab value
         q_ab = np.load("../../data/processed/pts_in_hull.npy")
@@ -414,18 +415,19 @@ class RichardImageColorizationModel_V1(BaseImageColorizationModel):
         model = Model(input=[init], output=[color_output], name=self.model_name)
 
         sgd = SGD(lr=0.0005, decay=0.5e-3, momentum=0.9, nesterov=True)
+        adam = Adam(lr=0.001)
 
         # 同时预测亮度信息和色度信息,即多任务输出
         # model.compile(loss={'color_output': categorical_crossentropy_color(prior_factor), 'gray_output': 'mae'},
         #               loss_weights=[1., 1.], optimizer=sgd)
 
         # 仅预测色度信息
-        model.compile(loss=categorical_crossentropy_color(prior_factor), optimizer=sgd)
+        model.compile(loss=categorical_crossentropy_color(prior_factor), optimizer=adam)
 
         self.model = model
         model.summary()
 
-        plot(model, to_file='../../figures/%s_%s.png' % (self.model_name, sub_name), show_shapes=True, show_layer_names=True)
+        plot_model(model, to_file='../../figures/%s_%s.png' % (self.model_name, sub_name), show_shapes=True, show_layer_names=True)
         return model
 
     def fit(self, **kwargs):
@@ -447,41 +449,38 @@ class ResidualImageColorizationModel(BaseImageColorizationModel):
         """
         sub_name = kwargs["sub_name"]
 
-
         # Load the array of quantized ab value
         q_ab = np.load("../../data/processed/pts_in_hull.npy")
         nb_q = q_ab.shape[0]
 
-        init = super(ResidualImageColorizationModel_V1, self).create_model(**kwargs)
+        init = super(ResidualImageColorizationModel, self).create_model(**kwargs)
 
-        level1_1 = Conv2D(64, (3, 3), activation='relu', padding='same', strides=(2, 2), kernel_initializer='he_normal',
-                          name='level1_1')(init)
+        level1_1 = Conv2D(64, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(init)
         level1_1 = BatchNormalization(axis=1)(level1_1)
-        level1_1 = Conv2D(64, (3, 3), activation='relu', padding='same', strides=(2, 2), kernel_initializer='he_normal',
-                          name='level2_1')(level1_1)
+        level1_1 = Conv2D(64, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(level1_1)
         level1_1 = BatchNormalization(axis=1)(level1_1)
 
-        level2_1 = Conv2D(128, (3, 3), activation='relu', padding='same', dilation_rate=(2, 2),
-                          kernel_initializer='he_normal',
-                          name='level3_1')(level1_1)
+        level2_1 = Conv2D(128, (3, 3), activation='relu', padding='same', strides=(2, 2), kernel_initializer='he_normal')(level1_1)
         level2_1 = BatchNormalization(axis=1)(level2_1)
 
-        level3_1 = Conv2D(256, (3, 3), activation='relu', padding='same', dilation_rate=(2, 2),
-                          kernel_initializer='he_normal')(level2_1)
+        level3_1 = Conv2D(256, (3, 3), activation='relu', padding='same', strides=(2, 2), kernel_initializer='he_normal')(level2_1)
         level3_1 = BatchNormalization(axis=1)(level3_1)
 
-        level4_1 = Conv2D(512, (3, 3), activation='relu', padding='same', dilation_rate=(2, 2),
-                          kernel_initializer='he_normal')(level3_1)
+        level4_1 = Conv2D(512, (3, 3), activation='relu', padding='same', strides=(2, 2), kernel_initializer='he_normal')(level3_1)
         level4_1 = BatchNormalization(axis=1)(level4_1)
+
+        level4_2 = Conv2D(512, (3, 3), activation='relu', padding='same', dilation_rate=(2, 2), kernel_initializer='he_normal')(level4_1)
+        level4_2 = BatchNormalization(axis=1)(level4_2)
+
 
         # upsample
 
-        level3_2 = UpSampling2D(size=(2, 2), name="upsampling2d_2")(level4_1)
+        level3_2 = UpSampling2D(size=(2, 2), name="upsampling2d_1")(level4_2)
         level3_2 = Conv2D(256, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(level3_2)
 
         level3 = Average()([level3_1, level3_2])
 
-        level2_2 = UpSampling2D(size=(2, 2), name="upsampling2d_3")(level3)
+        level2_2 = UpSampling2D(size=(2, 2), name="upsampling2d_2")(level3)
         level2_2 = Conv2D(128, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal', name='level2_2')(level2_2)
 
         level2 = Average()([level2_1, level2_2])
@@ -499,14 +498,14 @@ class ResidualImageColorizationModel(BaseImageColorizationModel):
         model = Model(input=[init], output=[color_output], name=self.model_name)
 
         sgd = SGD(lr=0.0005, decay=0.5e-3, momentum=0.9, nesterov=True)
-
+        adam = Adam(lr=0.001)
         # 仅预测色度信息
-        model.compile(loss=categorical_crossentropy_color(prior_factor), optimizer=sgd)
+        model.compile(loss=categorical_crossentropy_color(prior_factor), optimizer=adam)
 
         self.model = model
         model.summary()
 
-        plot(model, to_file='../../figures/%s_%s.png' % (self.model_name, sub_name), show_shapes=True, show_layer_names=True)
+        plot_model(model, to_file='../../figures/%s_%s.png' % (self.model_name, sub_name), show_shapes=True, show_layer_names=True)
         return model
 
     def fit(self, **kwargs):
@@ -525,40 +524,41 @@ class HypercolumImageColorizationModel(BaseImageColorizationModel):
         """
         sub_name = kwargs["sub_name"]
 
-
         # Load the array of quantized ab value
         q_ab = np.load("../../data/processed/pts_in_hull.npy")
         nb_q = q_ab.shape[0]
 
         init = super(HypercolumImageColorizationModel, self).create_model(**kwargs)
 
-        level0_1 = Conv2D(64, (3, 3), activation='relu', padding='same', strides=(2, 2), kernel_initializer='he_normal',
+        level0_1 = Conv2D(64, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal',
                           name='level0_1')(init)
         level0_1 = BatchNormalization(axis=1)(level0_1)
-        level1_1 = Conv2D(64, (3, 3), activation='relu', padding='same', strides=(2, 2), kernel_initializer='he_normal',
+        level1_1 = Conv2D(64, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal',
                           name='level1_1')(level0_1)
         level1_1 = BatchNormalization(axis=1)(level1_1)
 
-        level2_1 = Conv2D(128, (3, 3), activation='relu', padding='same', dilation_rate=(2, 2),
+        level2_1 = Conv2D(128, (3, 3), activation='relu', padding='same', strides=(2, 2),
                           kernel_initializer='he_normal',
                           name='level2_1')(level1_1)
         level2_1 = BatchNormalization(axis=1)(level2_1)
 
-        level3_1 = Conv2D(256, (3, 3), activation='relu', padding='same', dilation_rate=(2, 2),
+        level3_1 = Conv2D(256, (3, 3), activation='relu', padding='same', strides=(2, 2),
                           kernel_initializer='he_normal')(level2_1)
         level3_1 = BatchNormalization(axis=1)(level3_1)
 
-        level4_1 = Conv2D(512, (3, 3), activation='relu', padding='same', dilation_rate=(2, 2),
+        level4_1 = Conv2D(512, (3, 3), activation='relu', padding='same', strides=(2, 2),
                           kernel_initializer='he_normal')(level3_1)
         level4_1 = BatchNormalization(axis=1)(level4_1)
 
         # hypercolumn
 
-        level4_2 = UpSampling2D(size=(6, 6), name="upsampling2d_2")(level4_1)
+        level4_2 = UpSampling2D(size=(8, 8), name="upsampling2d_1")(level4_1)
         level3_2 = UpSampling2D(size=(4, 4), name="upsampling2d_2")(level3_1)
-        level2_2 = UpSampling2D(size=(2, 2), name="upsampling2d_2")(level2_1)
+        level2_2 = UpSampling2D(size=(2, 2), name="upsampling2d_3")(level2_1)
 
         level = Concatenate(axis=1)([level4_2, level3_2, level2_2, level1_1, level0_1])
+
+        level = Conv2D(512, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(level)
 
         color_output = Conv2D(nb_q, (3, 3), name="final_conv2D", padding="same")(level)
 
@@ -570,14 +570,14 @@ class HypercolumImageColorizationModel(BaseImageColorizationModel):
         model = Model(input=[init], output=[color_output], name=self.model_name)
 
         sgd = SGD(lr=0.0005, decay=0.5e-3, momentum=0.9, nesterov=True)
-
+        adam = Adam(lr=0.001)
         # 仅预测色度信息
-        model.compile(loss=categorical_crossentropy_color(prior_factor), optimizer=sgd)
+        model.compile(loss=categorical_crossentropy_color(prior_factor), optimizer=adam)
 
         self.model = model
         model.summary()
 
-        plot(model, to_file='../../figures/%s_%s.png' % (self.model_name, sub_name), show_shapes=True, show_layer_names=True)
+        plot_model(model, to_file='../../figures/%s_%s.png' % (self.model_name, sub_name), show_shapes=True, show_layer_names=True)
         return model
 
     def fit(self, **kwargs):
