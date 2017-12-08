@@ -51,7 +51,7 @@ if __name__ == '__main__':
                  "T": 0.5,
                  "sub_name": "t0.5",
                  "img_dim": args.img_dim,
-                 "model_name": 'Richard_Colorization'
+                 "model_name": 'Hypercolum_Colorization'
                  }
 
     '''Load Model'''
@@ -208,7 +208,7 @@ if __name__ == '__main__':
         skimage.io.imsave('../../results/' + sub_name + '/' + save_name + '.jpg', arr)
         name += 1
 
-        plt.show()
+        # plt.show()
 
 
 

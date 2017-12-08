@@ -122,6 +122,7 @@ class BaseImageColorizationModel(object):
         epoch_size = n_batch_per_epoch * batch_size
         img_dim = kwargs["img_dim"]
         sub_name = kwargs["sub_name"]
+        history = kwargs["history"]
         channels, width, height = img_dim
 
         # extract the patches size from the file name
@@ -153,6 +154,7 @@ class BaseImageColorizationModel(object):
         # Create a batch generator for the color data
         DataGen = batch_utils.DataGenerator(data_file, batch_size=batch_size, dset="training")
 
+
         if self.model:
             self.create_model(**kwargs)
 
@@ -170,6 +172,8 @@ class BaseImageColorizationModel(object):
                 BatchGen = DataGen.gen_batch_in_memory(color_lab, LLLIR_merge, nn_finder, nb_q)
             else:
                 BatchGen = DataGen.gen_batch(nn_finder, nb_q, prior_factor)
+
+            a = np.array([])
 
             for batch in BatchGen:
 
@@ -190,7 +194,14 @@ class BaseImageColorizationModel(object):
                 # 仅预测色度信息
                 progbar.add(batch_size, values=[("color_loss", train_loss)])
 
+                with open(history, "a") as f:
+                    f.write("%s\n" % str(train_loss))
+
+                a = np.append(a, train_loss)
+
                 if batch_counter >= n_batch_per_epoch:
+                    with open("epoch"+history, "a") as f:
+                        f.write("%s\n" % str(np.average(a)))
                     break
 
             print("")
@@ -316,7 +327,7 @@ class RichardImageColorizationModel(BaseImageColorizationModel):
         #               loss_weights=[1., 1.], optimizer=sgd)
 
         # 仅预测色度信息
-        model.compile(loss=categorical_crossentropy_color(prior_factor), optimizer=adam)
+        model.compile(loss=categorical_crossentropy_color(prior_factor), optimizer=sgd)
 
         self.model = model
         model.summary()
@@ -422,7 +433,7 @@ class RichardImageColorizationModel_V1(BaseImageColorizationModel):
         #               loss_weights=[1., 1.], optimizer=sgd)
 
         # 仅预测色度信息
-        model.compile(loss=categorical_crossentropy_color(prior_factor), optimizer=adam)
+        model.compile(loss=categorical_crossentropy_color(prior_factor), optimizer=sgd)
 
         self.model = model
         model.summary()
@@ -500,7 +511,7 @@ class ResidualImageColorizationModel(BaseImageColorizationModel):
         sgd = SGD(lr=0.0005, decay=0.5e-3, momentum=0.9, nesterov=True)
         adam = Adam(lr=0.001)
         # 仅预测色度信息
-        model.compile(loss=categorical_crossentropy_color(prior_factor), optimizer=adam)
+        model.compile(loss=categorical_crossentropy_color(prior_factor), optimizer=sgd)
 
         self.model = model
         model.summary()
@@ -572,7 +583,7 @@ class HypercolumImageColorizationModel(BaseImageColorizationModel):
         sgd = SGD(lr=0.0005, decay=0.5e-3, momentum=0.9, nesterov=True)
         adam = Adam(lr=0.001)
         # 仅预测色度信息
-        model.compile(loss=categorical_crossentropy_color(prior_factor), optimizer=adam)
+        model.compile(loss=categorical_crossentropy_color(prior_factor), optimizer=sgd)
 
         self.model = model
         model.summary()
