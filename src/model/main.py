@@ -11,8 +11,8 @@ if __name__ == "__main__":
                         help=('Training mode. Choose in_memory to load all the data in memory and train.'
                               'Choose on_demand to load batches from disk at each step'))
     parser.add_argument('--batch_size', default=6, type=int, help='Batch size')
-    parser.add_argument('--n_batch_per_epoch', default=52, type=int, help="Number of batches per epoch")
-    parser.add_argument('--nb_epoch', default=51, type=int, help="Number of training epochs")
+    parser.add_argument('--n_batch_per_epoch', default=30, type=int, help="Number of batches per epoch")
+    parser.add_argument('--nb_epoch', default=6, type=int, help="Number of training epochs")
     parser.add_argument('--nb_resblocks', default=2, type=int, help="Number of residual blocks for simple model")
     parser.add_argument('--nb_neighbors', default=10, type=int, help="Number of nearest neighbors for soft encoding")
     parser.add_argument('--epoch', default=5, type=int, help="Epoch at which weights were saved for evaluation")
@@ -23,6 +23,8 @@ if __name__ == "__main__":
     parser.add_argument('--img_dim', default=(3, 128, 128), type=tuple, help="set the training image size")
     parser.add_argument('--sub_name', default='', type=str, help="set the sub name of the model")
     parser.add_argument('--model_name', default='Colorization', type=str, help="set the model name of the model, only use in test_class.py")
+
+    parser.add_argument('--history', default='1.txt', type=str, help="the output dictionary of the loss")
     args = parser.parse_args()
 
     # Set default params
@@ -38,7 +40,8 @@ if __name__ == "__main__":
                  "T": 0.5,
                  "sub_name": "t0.5",
                  "img_dim": args.img_dim,
-                 "model_name": 'RichardImageColorizationModel'
+                 "model_name": 'RichardImageColorizationModel',
+                 "history": '1.txt'
                  }
 
 
@@ -54,7 +57,8 @@ if __name__ == "__main__":
                  "T": 0.5,
                  "sub_name": "t0.5",
                  "img_dim": args.img_dim,
-                 "model_name": 'RichardImageColorizationModel_V1'
+                 "model_name": 'RichardImageColorizationModel_V1',
+                 "history": '2.txt'
                  }
 
     d_params3 = {"data_file": args.data_file,
@@ -68,7 +72,8 @@ if __name__ == "__main__":
                  "T": 0.5,
                  "sub_name": "t0.5",
                  "img_dim": args.img_dim,
-                 "model_name": 'ResidualImageColorizationModel'
+                 "model_name": 'ResidualImageColorizationModel',
+                 "history": '3.txt'
                  }
 
     d_params4 = {"data_file": args.data_file,
@@ -82,7 +87,8 @@ if __name__ == "__main__":
                  "T": 0.5,
                  "sub_name": "t0.5",
                  "img_dim": args.img_dim,
-                 "model_name": 'HypercolumImageColorizationModel'
+                 "model_name": 'HypercolumImageColorizationModel',
+                 "history": '4.txt'
                  }
 
     Flag1 = True
@@ -141,7 +147,7 @@ if __name__ == "__main__":
 
     Flag3 = True
     if Flag3:
-        params = [d_params2]
+        params = [d_params3]
 
         for x in params:
             # Launch training
