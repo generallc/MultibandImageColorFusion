@@ -467,8 +467,7 @@ class ResidualImageColorizationModel(BaseImageColorizationModel):
         init = super(ResidualImageColorizationModel, self).create_model(**kwargs)
 
         level1_1 = Conv2D(64, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(init)
-        level1_1 = BatchNormalization(axis=1)(level1_1)
-        level1_1 = Conv2D(64, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(level1_1)
+        level1_1 = Conv2D(64, (3, 3), activation='relu', padding='same', strides=(2, 2), kernel_initializer='he_normal')(level1_1)
         level1_1 = BatchNormalization(axis=1)(level1_1)
 
         level2_1 = Conv2D(128, (3, 3), activation='relu', padding='same', strides=(2, 2), kernel_initializer='he_normal')(level1_1)
@@ -477,15 +476,13 @@ class ResidualImageColorizationModel(BaseImageColorizationModel):
         level3_1 = Conv2D(256, (3, 3), activation='relu', padding='same', strides=(2, 2), kernel_initializer='he_normal')(level2_1)
         level3_1 = BatchNormalization(axis=1)(level3_1)
 
-        level4_1 = Conv2D(512, (3, 3), activation='relu', padding='same', strides=(2, 2), kernel_initializer='he_normal')(level3_1)
+        level4_1 = Conv2D(256, (3, 3), activation='relu', padding='same', dilation_rate=(2, 2), kernel_initializer='he_normal')(level3_1)
         level4_1 = BatchNormalization(axis=1)(level4_1)
 
-        level4_2 = Conv2D(512, (3, 3), activation='relu', padding='same', dilation_rate=(2, 2), kernel_initializer='he_normal')(level4_1)
+        level4_2 = Conv2D(256, (3, 3), activation='relu', padding='same', dilation_rate=(2, 2), kernel_initializer='he_normal')(level4_1)
         level4_2 = BatchNormalization(axis=1)(level4_2)
 
-
         # upsample
-
         level3_2 = UpSampling2D(size=(2, 2), name="upsampling2d_1")(level4_2)
         level3_2 = Conv2D(256, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(level3_2)
 
