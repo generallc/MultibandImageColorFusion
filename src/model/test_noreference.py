@@ -48,10 +48,10 @@ if __name__ == '__main__':
                  "training_mode": args.training_mode,
                  "nb_neighbors": args.nb_neighbors,
                  "epoch": args.epoch,
-                 "T": 0,
-                 "sub_name": "t0",
+                 "T": 0.5,
+                 "sub_name": "t0.5",
                  "img_dim": args.img_dim,
-                 "model_name": 'Richard_Colorization'
+                 "model_name": 'Richard_Colorization_V1'
                  }
 
     '''Load Model'''
@@ -67,18 +67,26 @@ if __name__ == '__main__':
     elif model_name == "Richard_Colorization_V1":
         color_model = models.RichardImageColorizationModel_V1().create_model(**d_params)
 
+    elif model_name == "Residual_Colorization":
+        color_model = models.ResidualImageColorizationModel().create_model(**d_params)
+
+    elif model_name == "Hypercolum_Colorization":
+        color_model = models.HypercolumImageColorizationModel().create_model(**d_params)
+
+
+
     # Load weights
-    weights_path = os.path.join('../../models/%s/%s/%s_weights_epoch50.h5' % (model_name, sub_name, model_name))
+    weights_path = os.path.join('../../models/%s/%s/%s_weights_epoch75.h5' % (model_name, sub_name, model_name))
     color_model.load_weights(weights_path)
 
-    directory = "../../data/raw/original/test"
+    directory = "../../data/raw/original/hg_test"
     q_ab = np.load('../../data/processed/pts_in_hull.npy')  # load cluster centers
     nb_q = q_ab.shape[0]
     # put test images directory in list
 
     list_II = [directory + "/II/" + file for file in sorted(os.listdir(directory + "/II"))]
-    list_IR = [directory + "/IR/" + file for file in sorted(os.listdir(directory + "/IR"))]
-    list_Vis = [directory + "/Vis/" + file for file in sorted(os.listdir(directory + "/Vis"))]
+    list_IR = [directory + "/MWIR_black/" + file for file in sorted(os.listdir(directory + "/MWIR_black"))]
+    list_Vis = [directory + "/II/" + file for file in sorted(os.listdir(directory + "/II"))]
 
     name = 1
     for IIPath, IRPath, VisPath in itertools.izip(list_II, list_IR, list_Vis):
@@ -87,9 +95,21 @@ if __name__ == '__main__':
         img_IR = cv2.imread(IRPath, 0) / 255.
         img_Vis = cv2.imread(VisPath, 0) / 255.
 
-        img_id = IIPath.split()[1]
+
+        #自建数据
+        img_id = IIPath.split('II_')[1]
         img_id = img_id.split('.')[0]
+
+        #TNO数据
+
+        # img_id = IIPath.split()[1]
+        # img_id = img_id.split('.')[0]
+
         print(img_id)
+
+
+
+
 
         (H_orig, W_orig) = img_II.shape[:2]
 
@@ -175,7 +195,7 @@ if __name__ == '__main__':
 
 
 
-        X_colorized = [np.expand_dims(color.lab2rgb(im), 0) for im in X_colorized_IR]
+        X_colorized = [np.expand_dims(color.lab2rgb(im), 0) for im in X_colorized_Vis]
         X_colorized = np.concatenate(X_colorized, 0).transpose(0, 3, 1, 2)
         arr = X_colorized[0]
         arr = arr.transpose(1, 2, 0)

@@ -1,8 +1,16 @@
 
 import numpy as np
+import ast
 
-a = np.array([])
-a= np.append(a,5)
-a= np.append(a,7)
-a= np.average(a)
-print(a)
+import matplotlib.pyplot as plt
+
+filename = "1.txt"
+history = {}
+with open(filename, "r") as f:
+    history = ast.literal_eval(f.read())
+fig = plt.figure(figsize=(6, 6))
+plt.plot(history['loss'])
+plt.plot(history['val_loss'])
+fig.show()
+plt.show()
+
