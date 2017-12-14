@@ -1,5 +1,5 @@
 import argparse
-import models
+import models_residual
 
 
 if __name__ == "__main__":
@@ -11,6 +11,7 @@ if __name__ == "__main__":
                         help=('Training mode. Choose in_memory to load all the data in memory and train.'
                               'Choose on_demand to load batches from disk at each step'))
     parser.add_argument('--batch_size', default=6, type=int, help='Batch size')
+    parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
     parser.add_argument('--n_batch_per_epoch', default=50, type=int, help="Number of batches per epoch")
     parser.add_argument('--nb_epoch', default=80, type=int, help="Number of training epochs")
     parser.add_argument('--nb_resblocks', default=2, type=int, help="Number of residual blocks for simple model")
@@ -29,6 +30,24 @@ if __name__ == "__main__":
 
     # Set default params
 
+
+    d_params0 = {"data_file": args.data_file,
+                 "batch_size": args.batch_size,
+                 "n_batch_per_epoch": args.n_batch_per_epoch,
+                 "nb_epoch": args.nb_epoch,
+                 "nb_resblocks": args.nb_resblocks,
+                 "training_mode": args.training_mode,
+                 "nb_neighbors": args.nb_neighbors,
+                 "epoch": args.epoch,
+                 "T": 0.5,
+                 "sub_name": "t0.5",
+                 "img_dim": args.img_dim,
+                 "model_name": 'ResidualImageColorizationModel',
+                 "history": 'Residual_up.txt',
+                 "lr": 0.001,
+                 }
+
+
     d_params1 = {"data_file": args.data_file,
                  "batch_size": args.batch_size,
                  "n_batch_per_epoch": args.n_batch_per_epoch,
@@ -40,10 +59,10 @@ if __name__ == "__main__":
                  "T": 0.5,
                  "sub_name": "t0.5",
                  "img_dim": args.img_dim,
-                 "model_name": 'RichardImageColorizationModel',
-                 "history": 'Richard.txt'
+                 "model_name": 'ResidualImageColorizationModel_trans',
+                 "history": 'Residual_trans.txt',
+                 "lr": 0.001,
                  }
-
 
 
     d_params2 = {"data_file": args.data_file,
@@ -57,41 +76,42 @@ if __name__ == "__main__":
                  "T": 0.5,
                  "sub_name": "t0.5",
                  "img_dim": args.img_dim,
-                 "model_name": 'RichardImageColorizationModel_V1',
-                 "history": 'RichardV1.txt'
+                 "model_name": 'ResidualImageColorizationModel_subpixel',
+                 "history": 'Residual_subpixel.txt',
+                 "lr": 0.001,
                  }
 
-    d_params3 = {"data_file": args.data_file,
-                 "batch_size": args.batch_size,
-                 "n_batch_per_epoch": args.n_batch_per_epoch,
-                 "nb_epoch": args.nb_epoch,
-                 "nb_resblocks": args.nb_resblocks,
-                 "training_mode": args.training_mode,
-                 "nb_neighbors": args.nb_neighbors,
-                 "epoch": args.epoch,
-                 "T": 0.5,
-                 "sub_name": "t0.5",
-                 "img_dim": args.img_dim,
-                 "model_name": 'ResidualImageColorizationModel',
-                 "history": 'Residual.txt'
-                 }
 
-    d_params4 = {"data_file": args.data_file,
-                 "batch_size": args.batch_size,
-                 "n_batch_per_epoch": args.n_batch_per_epoch,
-                 "nb_epoch": args.nb_epoch,
-                 "nb_resblocks": args.nb_resblocks,
-                 "training_mode": args.training_mode,
-                 "nb_neighbors": args.nb_neighbors,
-                 "epoch": args.epoch,
-                 "T": 0.5,
-                 "sub_name": "t0.5",
-                 "img_dim": args.img_dim,
-                 "model_name": 'HypercolumImageColorizationModel',
-                 "history": 'Hypercolum.txt'
-                 }
 
-    Flag1 = False
+
+    Flag = True
+    if Flag:
+        params = [d_params0]
+
+        for x in params:
+            # Launch training
+
+            """
+            Plot the models
+            """
+
+            model = models_residual.ResidualImageColorizationModel().create_model(**x)
+
+            """
+            Train Colorization
+            """
+            colorization = models_residual.ResidualImageColorizationModel()
+
+            colorization.create_model(**x)
+
+            model = colorization.fit(**x)
+
+            """
+            Colorization prediction
+            """
+            # predict_main(**x)
+
+    Flag1 = True
     if Flag1:
         params = [d_params1]
 
@@ -102,12 +122,12 @@ if __name__ == "__main__":
             Plot the models
             """
 
-            model = models.RichardImageColorizationModel().create_model(**x)
+            model = models_residual.ResidualImageColorizationModel_trans().create_model(**x)
 
             """
             Train Colorization
             """
-            colorization = models.RichardImageColorizationModel()
+            colorization = models_residual.ResidualImageColorizationModel_trans()
 
             colorization.create_model(**x)
 
@@ -117,6 +137,7 @@ if __name__ == "__main__":
             Colorization prediction
             """
             # predict_main(**x)
+
 
     Flag2 = True
     if Flag2:
@@ -129,12 +150,12 @@ if __name__ == "__main__":
             Plot the models
             """
 
-            model = models.RichardImageColorizationModel_V1().create_model(**x)
+            model = models_residual.ResidualImageColorizationModel_subpixel().create_model(**x)
 
             """
             Train Colorization
             """
-            colorization = models.RichardImageColorizationModel_V1()
+            colorization = models_residual.ResidualImageColorizationModel_subpixel()
 
             colorization.create_model(**x)
 
@@ -145,56 +166,3 @@ if __name__ == "__main__":
             """
             # predict_main(**x)
 
-    Flag3 = True
-    if Flag3:
-        params = [d_params3]
-
-        for x in params:
-            # Launch training
-
-            """
-            Plot the models
-            """
-
-            model = models.ResidualImageColorizationModel().create_model(**x)
-
-            """
-            Train Colorization
-            """
-            colorization = models.ResidualImageColorizationModel()
-
-            colorization.create_model(**x)
-
-            model = colorization.fit(**x)
-
-            """
-            Colorization prediction
-            """
-            # predict_main(**x)
-
-    Flag4 = True
-    if Flag4:
-        params = [d_params4]
-
-        for x in params:
-            # Launch training
-
-            """
-            Plot the models
-            """
-
-            model = models.HypercolumImageColorizationModel().create_model(**x)
-
-            """
-            Train Colorization
-            """
-            colorization = models.HypercolumImageColorizationModel()
-
-            colorization.create_model(**x)
-
-            model = colorization.fit(**x)
-
-            """
-            Colorization prediction
-            """
-            # predict_main(**x)

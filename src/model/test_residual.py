@@ -11,7 +11,7 @@ import numpy as np
 import skimage.io
 
 sys.path.insert(0, '/media/deeplearning/Document_SSD/FrankLewis/DoctoralCodes/MultibandImageColorFusion/src/model')
-import models
+import models_residual
 
 
 if __name__ == '__main__':
@@ -25,8 +25,9 @@ if __name__ == '__main__':
                         help=('Training mode. Choose in_memory to load all the data in memory and train.'
                               'Choose on_demand to load batches from disk at each step'))
     parser.add_argument('--batch_size', default=6, type=int, help='Batch size')
+    parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
     parser.add_argument('--n_batch_per_epoch', default=50, type=int, help="Number of batches per epoch")
-    parser.add_argument('--nb_epoch', default=51, type=int, help="Number of training epochs")
+    parser.add_argument('--nb_epoch', default=80, type=int, help="Number of training epochs")
     parser.add_argument('--nb_resblocks', default=2, type=int, help="Number of residual blocks for simple model")
     parser.add_argument('--nb_neighbors', default=10, type=int, help="Number of nearest neighbors for soft encoding")
     parser.add_argument('--epoch', default=5, type=int, help="Epoch at which weights were saved for evaluation")
@@ -38,6 +39,7 @@ if __name__ == '__main__':
     parser.add_argument('--sub_name', default='', type=str, help="set the sub name of the model")
     parser.add_argument('--model_name', default='Colorization', type=str,
                         help="set the model name of the model, only use in test_class.py")
+    parser.add_argument('--history', default='1.txt', type=str, help="the output dictionary of the loss")
     args = parser.parse_args()
 
     d_params = {"data_file": args.data_file,
@@ -48,10 +50,11 @@ if __name__ == '__main__':
                  "training_mode": args.training_mode,
                  "nb_neighbors": args.nb_neighbors,
                  "epoch": args.epoch,
-                 "T": 1,
-                 "sub_name": "t1",
+                 "T": 0.5,
+                 "sub_name": "t0.5",
                  "img_dim": args.img_dim,
-                 "model_name": 'Residual_Colorization'
+                 "model_name": 'Residual_Colorization_subpixel',
+                 "lr": 0.001
                  }
 
     '''Load Model'''
@@ -62,16 +65,12 @@ if __name__ == '__main__':
     sub_name = d_params["sub_name"]
 
     # Load colorizer model
-    if model_name == "Richard_Colorization":
-        color_model = models.RichardImageColorizationModel().create_model(**d_params)
-    elif model_name == "Richard_Colorization_V1":
-        color_model = models.RichardImageColorizationModel_V1().create_model(**d_params)
+    if model_name == "Residual_Colorization":
+        color_model = models_residual.ResidualImageColorizationModel().create_model(**d_params)
+    elif model_name == "Residual_Colorization_subpixel":
+        color_model = models_residual.ResidualImageColorizationModel_subpixel().create_model(**d_params)
 
-    elif model_name == "Residual_Colorization":
-        color_model = models.ResidualImageColorizationModel().create_model(**d_params)
 
-    elif model_name == "Hypercolum_Colorization":
-        color_model = models.HypercolumImageColorizationModel().create_model(**d_params)
 
 
     # Load weights
